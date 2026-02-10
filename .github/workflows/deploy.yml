@@ -38,7 +38,6 @@ jobs:
         run: npx wrangler deploy
 
       - name: Configure secrets (if provided)
-        if: ${{ secrets.MOLTBOT_GATEWAY_TOKEN != '' }}
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           MOLTBOT_GATEWAY_TOKEN: ${{ secrets.MOLTBOT_GATEWAY_TOKEN }}
