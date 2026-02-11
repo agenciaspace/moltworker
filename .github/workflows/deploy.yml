@@ -54,7 +54,7 @@ jobs:
         run: |
           echo "✅ Deploy completed successfully!"
           echo ""
-          echo "🔗 Your worker is available at: https://moltbot-sandbox.workers.dev"
+          echo "🔗 Your worker is available at: https://moltworker.workers.dev"
           echo ""
           if [ -n "${{ secrets.MOLTBOT_GATEWAY_TOKEN }}" ]; then
             echo "🔑 Access the Control UI with your gateway token"
