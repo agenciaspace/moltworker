@@ -1,0 +1,18 @@
+# Cloudflare Pages configuration
+# This file configures how Cloudflare Pages builds and deploys your Worker
+
+build:
+  # Build command (already handled by package.json)
+  command: npm run build
+
+  # Output directory for static assets
+  cwd: .
+
+  # Environment variables during build
+  watch_paths: []
+
+# IMPORTANT: Use 'wrangler deploy' instead of 'wrangler versions upload'
+# because this Worker has Durable Object migrations that must be applied
+deployment:
+  command: npx wrangler deploy
+  compatibility_date: 2025-05-06
