@@ -64,12 +64,24 @@ jobs:
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           MOLTBOT_GATEWAY_TOKEN: ${{ secrets.MOLTBOT_GATEWAY_TOKEN }}
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          DEV_MODE: ${{ secrets.DEV_MODE }}
+          CF_ACCESS_TEAM_DOMAIN: ${{ secrets.CF_ACCESS_TEAM_DOMAIN }}
+          CF_ACCESS_AUD: ${{ secrets.CF_ACCESS_AUD }}
         run: |
           if [ -n "$MOLTBOT_GATEWAY_TOKEN" ]; then
             echo "$MOLTBOT_GATEWAY_TOKEN" | npx wrangler secret put MOLTBOT_GATEWAY_TOKEN || true
           fi
           if [ -n "$ANTHROPIC_API_KEY" ]; then
             echo "$ANTHROPIC_API_KEY" | npx wrangler secret put ANTHROPIC_API_KEY || true
+          fi
+          if [ -n "$DEV_MODE" ]; then
+            echo "$DEV_MODE" | npx wrangler secret put DEV_MODE || true
+          fi
+          if [ -n "$CF_ACCESS_TEAM_DOMAIN" ]; then
+            echo "$CF_ACCESS_TEAM_DOMAIN" | npx wrangler secret put CF_ACCESS_TEAM_DOMAIN || true
+          fi
+          if [ -n "$CF_ACCESS_AUD" ]; then
+            echo "$CF_ACCESS_AUD" | npx wrangler secret put CF_ACCESS_AUD || true
           fi
 
       - name: Output deployment info
