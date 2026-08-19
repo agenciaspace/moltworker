@@ -1,7 +1,7 @@
 export default `
 const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
 const genericNames=new Set(['empresa local','empresa','local business','business','dentista','clínica','clinica','advogado','arquiteto','contador','fisioterapia','salão de beleza','salao de beleza','academia','restaurante','imobiliária','imobiliaria']);
-let results=[],saved=JSON.parse(localStorage.getItem('site-sales-os:leads')||'[]').filter(x=>x&&x.name&&!genericNames.has(String(x.name).trim().toLowerCase())),selected=null,goal='first-contact';
+let results=[],saved=JSON.parse(localStorage.getItem('site-sales-os:leads')||'[]').filter(x=>x&&cleanName(x.name)),selected=null,goal='first-contact';
 const stages=[['new','novo'],['contacted','contatado'],['replied','respondeu'],['proposal','proposta'],['won','ganho'],['lost','perdido']];
 const overpassEndpoints=['https://overpass.kumi.systems/api/interpreter','https://overpass-api.de/api/interpreter','https://overpass.private.coffee/api/interpreter'];
 const map=L.map('map').setView([-23.55,-46.63],11);L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap contributors'}).addTo(map);let markers=[];
@@ -9,7 +9,7 @@ const esc=s=>String(s||'').replace(/[&<>\"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&
 function persist(){localStorage.setItem('site-sales-os:leads',JSON.stringify(saved));stats()}
 function stats(){$('#leadCount').textContent=results.length;$('#savedCount').textContent=saved.length}
 function cleanPhone(s=''){return String(s).replace(/[^\\d+]/g,'')}
-function cleanName(s=''){const v=String(s||'').replace(/\\s+/g,' ').trim();if(!v||v.length<2||genericNames.has(v.toLowerCase()))return'';return v}
+function cleanName(s=''){const v=String(s||'').replace(/\\s+/g,' ').trim();if(!v||v.length<2||genericNames.has(v.toLowerCase())||/^\\d+[a-z]?$/i.test(v)||/^(rua|r\.|avenida|av\.|alameda|travessa|praça|praca|largo|rodovia|estrada|viel[ae]|beco)\\b/i.test(v))return'';return v}
 function osmName(t={}){return cleanName(t.name)||cleanName(t['name:pt'])||cleanName(t.brand)||cleanName(t.operator)||cleanName(t.official_name)||cleanName(t.short_name)||cleanName(t.alt_name)||cleanName(t['contact:name'])||''}
 function osmLead(el){const t=el.tags||{},lat=el.lat??el.center?.lat,lng=el.lon??el.center?.lon,name=osmName(t);if(!name)return null;return{id:'osm-'+el.type+'-'+el.id,source:'osm',name,address:[t['addr:street'],t['addr:housenumber'],t['addr:suburb'],t['addr:city']].filter(Boolean).join(', '),lat,lng,phone:cleanPhone(t.phone||t['contact:phone']||''),website:t.website||t['contact:website']||'',mapsUrl:lat&&lng?'https://www.openstreetmap.org/?mlat='+lat+'&mlon='+lng+'#map=18/'+lat+'/'+lng:'',rating:null,reviews:0,type:t.amenity||t.office||t.shop||t.healthcare||t.leisure||'',instagram:t.instagram||t['contact:instagram']||'',status:'new'}}
 async function browserOverpass(query){const errors=[];for(const endpoint of overpassEndpoints){try{const c=new AbortController(),timer=setTimeout(()=>c.abort(),15000);const r=await fetch(endpoint+'?data='+encodeURIComponent(query),{signal:c.signal,headers:{Accept:'application/json'}});clearTimeout(timer);if(!r.ok){errors.push(new URL(endpoint).host+':'+r.status);continue}const d=await r.json();const leads=(d.elements||[]).map(osmLead).filter(x=>x&&x.name&&x.lat&&x.lng&&!x.website).slice(0,80);return{leads,provider:'openstreetmap:'+new URL(endpoint).host}}catch(e){errors.push(new URL(endpoint).host+':'+(e.name||'erro'))}}throw Error(errors.join(', '))}
