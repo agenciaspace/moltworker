@@ -6,10 +6,10 @@ deploy_outcome=success
 ────────────────────
 Total Upload: 61.64 KiB / gzip: 19.27 KiB
 Worker Startup Time: 6 ms
-Uploaded site-sales-os (2.65 sec)
-Deployed site-sales-os triggers (0.63 sec)
+Uploaded site-sales-os (2.03 sec)
+Deployed site-sales-os triggers (0.37 sec)
   https://site-sales-os.leon-925.workers.dev
-Current Version ID: 1e682496-c56c-4406-844b-6b9105ee4c31
+Current Version ID: 8ae5666e-2d59-4a95-845f-fe68093fe543
 
 Cloudflare collects anonymous telemetry about your usage of Wrangler. Learn more at https://github.com/cloudflare/workers-sdk/tree/main/packages/wrangler/telemetry.md
 
