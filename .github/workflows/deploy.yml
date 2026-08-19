@@ -36,14 +36,18 @@ jobs:
           npx wrangler deploy 2>&1 | tee /tmp/wrangler-output.txt
           URL=$(grep -Eo 'https://[A-Za-z0-9._-]+\.workers\.dev' /tmp/wrangler-output.txt | tail -n 1 || true)
           printf '%s\n' "$URL" > /tmp/url.txt
-      - name: Verify search API
+      - name: Verify APIs
         if: steps.deploy.outcome == 'success'
         shell: bash
         run: |
           URL=$(cat /tmp/url.txt)
-          curl -sS -D /tmp/headers.txt -o /tmp/leads.json -X POST "$URL/api/leads" \
+          curl -sS -o /tmp/health.json "$URL/api/health" || true
+          curl -sS -o /tmp/leads.json -X POST "$URL/api/leads" \
             -H 'content-type: application/json' \
             --data '{"city":"São Paulo","niche":"dentist","radius":7000}' || true
+          curl -sS -o /tmp/fallback.json -X POST "$URL/api/fallback-leads" \
+            -H 'content-type: application/json' \
+            --data '{"city":"São Paulo","niche":"dentist"}' || true
       - name: Record diagnostics
         if: always()
         shell: bash
@@ -56,10 +60,12 @@ jobs:
             printf 'deploy_outcome=%s\n' "${{ steps.deploy.outcome }}"
             printf -- '---wrangler---\n'
             cat /tmp/wrangler-output.txt 2>/dev/null || true
-            printf -- '\n---headers---\n'
-            cat /tmp/headers.txt 2>/dev/null || true
-            printf -- '\n---body---\n'
+            printf -- '\n---health---\n'
+            cat /tmp/health.json 2>/dev/null || true
+            printf -- '\n---leads---\n'
             cat /tmp/leads.json 2>/dev/null || true
+            printf -- '\n---fallback---\n'
+            cat /tmp/fallback.json 2>/dev/null || true
           } > site-sales-os-deploy-debug.txt
           git add site-sales-os-deploy-debug.txt
           git commit -m "Record deploy diagnostics [skip deploy]" || true
