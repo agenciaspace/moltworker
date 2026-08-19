@@ -1,6 +1,28 @@
-deploy_outcome=skipped
+deploy_outcome=success
 ---wrangler---
 
+ ⛅️ wrangler 4.60.0 (update available 4.124.0)
+──────────────────────────────────────────────
+Total Upload: 49.67 KiB / gzip: 15.55 KiB
+Worker Startup Time: 5 ms
+Uploaded site-sales-os (2.11 sec)
+Deployed site-sales-os triggers (0.47 sec)
+  https://site-sales-os.leon-925.workers.dev
+Current Version ID: db606f28-4a65-427b-8ae4-125aba84ca86
+
+Cloudflare collects anonymous telemetry about your usage of Wrangler. Learn more at https://github.com/cloudflare/workers-sdk/tree/main/packages/wrangler/telemetry.md
+
 ---headers---
+HTTP/2 200 
+date: Wed, 19 Aug 2026 03:16:39 GMT
+content-type: application/json; charset=utf-8
+content-length: 272
+report-to: {"group":"cf-nel","max_age":604800,"endpoints":[{"url":"https://a.nel.cloudflare.com/report/v4?s=dTmC92Ym7w4O8gD54VYQGaFaU7nnQCw6vSdEBrrhYNsHb24Eh%2FHK4Q8kRu%2B9qdYJPNMzrOtBpHakEQ%2BnCmJ7TGUpMfUZ8O0TriM2td%2BoMu9GskkJaPRkvSApgXAWiutydendx0SazC%2F7KE8Wn7PREMO7vWir"}]}
+nel: {"report_to":"cf-nel","success_fraction":0.0,"max_age":604800}
+server: cloudflare
+cf-ray: a2d60032092d13b1-IAD
+alt-svc: h3=":443"; ma=86400
+
 
 ---body---
+{"city":"São Paulo","niche":"dentist","provider":"openstreetmap-browser","center":{"lat":-23.5506507,"lng":-46.6333824},"overpassQuery":"[out:json][timeout:15];(nwr[\"amenity\"=\"dentist\"](around:7000,-23.5506507,-46.6333824););out center tags 80;","count":0,"leads":[]}
