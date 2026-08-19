@@ -11,7 +11,7 @@ permissions:
 
 jobs:
   deploy:
-    name: Deploy Worker and record URL
+    name: Deploy Worker and verify routes
     runs-on: ubuntu-latest
     timeout-minutes: 20
 
@@ -45,7 +45,18 @@ jobs:
           fi
           printf '%s\n' "$URL" > /tmp/site-sales-os-url.txt
 
-      - name: Record deployment URL
+      - name: Verify production routes
+        shell: bash
+        run: |
+          set -euo pipefail
+          URL=$(cat /tmp/site-sales-os-url.txt)
+          curl -fsS "$URL/api/health" | grep -q '"ok":true'
+          curl -fsS "$URL/" | grep -q 'siteslocais'
+          curl -fsS "$URL/app" | grep -q 'Prospect'
+          curl -fsS "$URL/members" | grep -q 'Área de aluno'
+          printf 'health=ok\nlanding=ok\napp=ok\nmembers=ok\n' > /tmp/site-sales-os-checks.txt
+
+      - name: Record deployment result
         shell: bash
         run: |
           URL=$(cat /tmp/site-sales-os-url.txt)
@@ -53,7 +64,10 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git fetch origin deploy-results-site-sales-os
           git checkout deploy-results-site-sales-os
-          printf '%s\n' "$URL" > site-sales-os-deployment-url.txt
-          git add site-sales-os-deployment-url.txt
-          git commit -m "Record site-sales-os deployment URL [skip deploy]" || true
+          {
+            printf 'url=%s\n' "$URL"
+            cat /tmp/site-sales-os-checks.txt
+          } > site-sales-os-deployment-result.txt
+          git add site-sales-os-deployment-result.txt
+          git commit -m "Verify site-sales-os deployment [skip deploy]" || true
           git push origin deploy-results-site-sales-os
