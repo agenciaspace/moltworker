@@ -41,9 +41,9 @@ jobs:
             -H 'content-type: application/json' \
             --data '{"city":"São Paulo","niche":"dentist","radius":7000}' || true
           printf 'url=%s\n' "$URL" > /tmp/result.txt
-          printf '---headers---\n' >> /tmp/result.txt
+          printf -- '---headers---\n' >> /tmp/result.txt
           cat /tmp/headers.txt >> /tmp/result.txt || true
-          printf '\n---body---\n' >> /tmp/result.txt
+          printf -- '\n---body---\n' >> /tmp/result.txt
           head -c 12000 /tmp/leads.json >> /tmp/result.txt || true
       - name: Record result
         shell: bash
