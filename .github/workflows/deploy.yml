@@ -36,8 +36,8 @@ jobs:
           : > /tmp/wrangler-output.txt
           success=0
           for attempt in 1 2 3; do
-            echo "=== wrangler attempt $attempt ===" | tee -a /tmp/wrangler-output.txt
-            if npx wrangler deploy 2>&1 | tee -a /tmp/wrangler-output.txt; then
+            echo "=== wrangler 4.124.0 attempt $attempt ===" | tee -a /tmp/wrangler-output.txt
+            if npx --yes wrangler@4.124.0 deploy 2>&1 | tee -a /tmp/wrangler-output.txt; then
               success=1
               break
             fi
@@ -76,5 +76,5 @@ jobs:
             cat /tmp/verify.json 2>/dev/null || true
           } > site-sales-os-deploy-debug.txt
           git add site-sales-os-deploy-debug.txt
-          git commit -m "Record v9 retry diagnostics [skip deploy]" || true
+          git commit -m "Record v9 wrangler 4.124 diagnostics [skip deploy]" || true
           git push origin deploy-results-site-sales-os
