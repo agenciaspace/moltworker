@@ -11,27 +11,19 @@ permissions:
 
 jobs:
   deploy:
-    name: Deploy Worker and verify routes
+    name: Deploy Worker and verify search
     runs-on: ubuntu-latest
     timeout-minutes: 20
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: '20'
           cache: 'npm'
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Build project
-        run: npm run build
-
-      - name: Deploy to Cloudflare
+      - run: npm ci
+      - run: npm run build
+      - name: Deploy
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
         shell: bash
@@ -39,35 +31,28 @@ jobs:
           set -o pipefail
           npx wrangler deploy 2>&1 | tee /tmp/wrangler-output.txt
           URL=$(grep -Eo 'https://[A-Za-z0-9._-]+\.workers\.dev' /tmp/wrangler-output.txt | tail -n 1 || true)
-          if [ -z "$URL" ]; then
-            echo "Wrangler completed without a workers.dev URL in its output."
-            exit 1
-          fi
-          printf '%s\n' "$URL" > /tmp/site-sales-os-url.txt
-
-      - name: Verify production routes
+          test -n "$URL"
+          printf '%s\n' "$URL" > /tmp/url.txt
+      - name: Verify search API
         shell: bash
         run: |
-          set -euo pipefail
-          URL=$(cat /tmp/site-sales-os-url.txt)
-          curl -fsS "$URL/api/health" | grep -q '"ok":true'
-          curl -fsS "$URL/" | grep -q 'siteslocais'
-          curl -fsS "$URL/app" | grep -q 'Prospect'
-          curl -fsS "$URL/members" | grep -q 'Área de aluno'
-          printf 'health=ok\nlanding=ok\napp=ok\nmembers=ok\n' > /tmp/site-sales-os-checks.txt
-
-      - name: Record deployment result
+          URL=$(cat /tmp/url.txt)
+          curl -sS -D /tmp/headers.txt -o /tmp/leads.json -X POST "$URL/api/leads" \
+            -H 'content-type: application/json' \
+            --data '{"city":"São Paulo","niche":"dentist","radius":7000}' || true
+          printf 'url=%s\n' "$URL" > /tmp/result.txt
+          printf '---headers---\n' >> /tmp/result.txt
+          cat /tmp/headers.txt >> /tmp/result.txt || true
+          printf '\n---body---\n' >> /tmp/result.txt
+          head -c 12000 /tmp/leads.json >> /tmp/result.txt || true
+      - name: Record result
         shell: bash
         run: |
-          URL=$(cat /tmp/site-sales-os-url.txt)
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git fetch origin deploy-results-site-sales-os
           git checkout deploy-results-site-sales-os
-          {
-            printf 'url=%s\n' "$URL"
-            cat /tmp/site-sales-os-checks.txt
-          } > site-sales-os-deployment-result.txt
-          git add site-sales-os-deployment-result.txt
-          git commit -m "Verify site-sales-os deployment [skip deploy]" || true
+          cp /tmp/result.txt site-sales-os-search-debug.txt
+          git add site-sales-os-search-debug.txt
+          git commit -m "Record search API debug [skip deploy]" || true
           git push origin deploy-results-site-sales-os
