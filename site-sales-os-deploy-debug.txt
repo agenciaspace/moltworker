@@ -3,20 +3,20 @@ deploy_outcome=success
 
  ⛅️ wrangler 4.60.0 (update available 4.124.0)
 ──────────────────────────────────────────────
-Total Upload: 62.88 KiB / gzip: 19.43 KiB
+Total Upload: 63.06 KiB / gzip: 19.56 KiB
 Worker Startup Time: 4 ms
-Uploaded site-sales-os (1.56 sec)
-Deployed site-sales-os triggers (0.57 sec)
+Uploaded site-sales-os (2.76 sec)
+Deployed site-sales-os triggers (0.68 sec)
   https://site-sales-os.leon-925.workers.dev
-Current Version ID: 5321bc35-6997-45c3-822f-d0b16fa07ea6
+Current Version ID: 43dbde41-bdba-4522-8f2f-cdadf488f62b
 
 Cloudflare collects anonymous telemetry about your usage of Wrangler. Learn more at https://github.com/cloudflare/workers-sdk/tree/main/packages/wrangler/telemetry.md
 
 ---health---
 {"ok":true,"service":"site-sales-os","version":8,"capabilities":{"googlePlaces":false,"webSearch":false}}
 ---leads---
-{"city":"São Paulo","niche":"lawyer","provider":"openstreetmap-browser","center":{"lat":-23.5506507,"lng":-46.6333824},"overpassQuery":"[out:json][timeout:15];(nwr[\"office\"=\"lawyer\"](around:7000,-23.5506507,-46.6333824););out center tags 80;","count":0,"leads":[],"capabilities":{"googlePlaces":false,"webSearch":false}}
+{"city":"São Paulo","niche":"lawyer","provider":"openstreetmap-browser","center":{"lat":-23.5506507,"lng":-46.6333824},"overpassQuery":"[out:json][timeout:15];(nwr[\"office\"=\"lawyer\"](around:7000,-23.5506507,-46.6333824););out center tags 80;","count":0,"leads":[],"capabilities":{"foursquarePlaces":false,"webSearch":false}}
 ---fallback---
 {"city":"São Paulo","niche":"lawyer","provider":"nominatim-poi-fallback","center":{"lat":-23.5506507,"lng":-46.6333824},"count":0,"leads":[]}
 ---verify-mattos-filho---
-{"results":[{"id":"mattos-filho-test","websiteStatus":"found","website":"https://mattosfilho.adv.br/","evidence":"domain-probe","sources":["domain-probe"]}],"capabilities":{"googlePlaces":false,"webSearch":false}}
+{"results":[{"id":"mattos-filho-test","websiteStatus":"found","website":"https://mattosfilho.adv.br/","evidence":"domain-probe","sources":["domain-probe"]}],"capabilities":{"foursquarePlaces":false,"webSearch":false}}
