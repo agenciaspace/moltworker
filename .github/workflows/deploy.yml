@@ -21,7 +21,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
           cache: 'npm'
       - run: npm ci
       - run: npm run build
@@ -76,5 +76,5 @@ jobs:
             cat /tmp/verify.json 2>/dev/null || true
           } > site-sales-os-deploy-debug.txt
           git add site-sales-os-deploy-debug.txt
-          git commit -m "Record v10 responsive TomTom diagnostics [skip deploy]" || true
+          git commit -m "Record v10 Node 22 diagnostics [skip deploy]" || true
           git push origin deploy-results-site-sales-os
