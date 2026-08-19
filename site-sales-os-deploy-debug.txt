@@ -1,22 +1,10 @@
-deploy_outcome=success
+deploy_outcome=skipped
 ---wrangler---
 
- ⛅️ wrangler 4.60.0 (update available 4.124.0)
-──────────────────────────────────────────────
-Total Upload: 58.59 KiB / gzip: 18.27 KiB
-Worker Startup Time: 3 ms
-Uploaded site-sales-os (2.11 sec)
-Deployed site-sales-os triggers (0.53 sec)
-  https://site-sales-os.leon-925.workers.dev
-Current Version ID: e192489e-2272-4072-8877-ab4a7dbdca38
-
-Cloudflare collects anonymous telemetry about your usage of Wrangler. Learn more at https://github.com/cloudflare/workers-sdk/tree/main/packages/wrangler/telemetry.md
-
 ---health---
-{"ok":true,"service":"site-sales-os","version":7}
+
 ---leads---
-{"city":"São Paulo","niche":"lawyer","provider":"openstreetmap-browser","center":{"lat":-23.5506507,"lng":-46.6333824},"overpassQuery":"[out:json][timeout:15];(nwr[\"office\"=\"lawyer\"](around:7000,-23.5506507,-46.6333824););out center tags 80;","count":0,"leads":[]}
+
 ---fallback---
-{"city":"São Paulo","niche":"lawyer","provider":"nominatim-poi-fallback","center":{"lat":-23.5506507,"lng":-46.6333824},"count":0,"leads":[]}
+
 ---verify-mattos-filho---
-{"results":[{"id":"mattos-filho-test","websiteStatus":"found","website":"https://mattosfilho.com.br/","evidence":"domain-and-content-match"}]}
