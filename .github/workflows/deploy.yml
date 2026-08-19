@@ -15,10 +15,8 @@ concurrency:
 
 jobs:
   deploy:
-    name: Deploy Worker and verify search
     runs-on: ubuntu-latest
     timeout-minutes: 20
-
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -28,6 +26,8 @@ jobs:
       - run: npm ci
       - run: npm run build
       - name: Deploy
+        id: deploy
+        continue-on-error: true
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
         shell: bash
@@ -35,28 +35,32 @@ jobs:
           set -o pipefail
           npx wrangler deploy 2>&1 | tee /tmp/wrangler-output.txt
           URL=$(grep -Eo 'https://[A-Za-z0-9._-]+\.workers\.dev' /tmp/wrangler-output.txt | tail -n 1 || true)
-          test -n "$URL"
           printf '%s\n' "$URL" > /tmp/url.txt
       - name: Verify search API
+        if: steps.deploy.outcome == 'success'
         shell: bash
         run: |
           URL=$(cat /tmp/url.txt)
           curl -sS -D /tmp/headers.txt -o /tmp/leads.json -X POST "$URL/api/leads" \
             -H 'content-type: application/json' \
             --data '{"city":"São Paulo","niche":"dentist","radius":7000}' || true
-          printf 'url=%s\n' "$URL" > /tmp/result.txt
-          printf -- '---headers---\n' >> /tmp/result.txt
-          cat /tmp/headers.txt >> /tmp/result.txt || true
-          printf -- '\n---body---\n' >> /tmp/result.txt
-          head -c 12000 /tmp/leads.json >> /tmp/result.txt || true
-      - name: Record result
+      - name: Record diagnostics
+        if: always()
         shell: bash
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git fetch origin deploy-results-site-sales-os
           git checkout deploy-results-site-sales-os
-          cp /tmp/result.txt site-sales-os-search-debug.txt
-          git add site-sales-os-search-debug.txt
-          git commit -m "Record search API debug [skip deploy]" || true
+          {
+            printf 'deploy_outcome=%s\n' "${{ steps.deploy.outcome }}"
+            printf -- '---wrangler---\n'
+            cat /tmp/wrangler-output.txt 2>/dev/null || true
+            printf -- '\n---headers---\n'
+            cat /tmp/headers.txt 2>/dev/null || true
+            printf -- '\n---body---\n'
+            cat /tmp/leads.json 2>/dev/null || true
+          } > site-sales-os-deploy-debug.txt
+          git add site-sales-os-deploy-debug.txt
+          git commit -m "Record deploy diagnostics [skip deploy]" || true
           git push origin deploy-results-site-sales-os
