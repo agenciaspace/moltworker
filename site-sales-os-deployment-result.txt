@@ -1,0 +1,5 @@
+url=https://site-sales-os.leon-925.workers.dev
+health=ok
+landing=ok
+app=ok
+members=ok
