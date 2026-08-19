@@ -23,15 +23,26 @@ const NICHE_LABELS = {
   gym: 'academia', restaurant: 'restaurante', real_estate: 'imobiliária'
 };
 
+const GENERIC_NAMES = new Set([
+  'empresa local','empresa','local business','business','dentista','clínica','clinica','advogado','arquiteto',
+  'contador','fisioterapia','salão de beleza','salao de beleza','academia','restaurante','imobiliária','imobiliaria'
+]);
+
 function json(data, status = 200) {
   return new Response(JSON.stringify(data), { status, headers: { 'content-type': 'application/json; charset=utf-8' } });
 }
 function text(body, type='text/html; charset=utf-8') { return new Response(body, { headers: { 'content-type': type } }); }
 function cleanPhone(phone = '') { return phone.replace(/[^\d+]/g, ''); }
+function cleanName(value = '') {
+  const name = String(value || '').replace(/\s+/g, ' ').trim();
+  if (!name || name.length < 2 || GENERIC_NAMES.has(name.toLowerCase())) return '';
+  return name;
+}
 
 function mapGooglePlace(p) {
+  const name = cleanName(p.displayName?.text);
   return {
-    id: p.id, source: 'google', name: p.displayName?.text || 'Empresa', address: p.formattedAddress || '',
+    id: p.id, source: 'google', name, address: p.formattedAddress || '',
     lat: p.location?.latitude, lng: p.location?.longitude,
     phone: cleanPhone(p.nationalPhoneNumber || p.internationalPhoneNumber || ''),
     website: p.websiteUri || '', mapsUrl: p.googleMapsUri || '', rating: p.rating || null,
@@ -52,13 +63,13 @@ async function googleSearch({ city, niche }, env) {
   });
   if (!r.ok) return null;
   const data = await r.json();
-  return (data.places || []).map(mapGooglePlace).filter(p => !p.website && p.lat && p.lng);
+  return (data.places || []).map(mapGooglePlace).filter(p => p.name && !p.website && p.lat && p.lng);
 }
 
 async function nominatim(params) {
   const url = new URL('https://nominatim.openstreetmap.org/search');
   Object.entries(params).forEach(([k,v]) => url.searchParams.set(k, String(v)));
-  const r = await fetch(url, { headers: { 'User-Agent': 'site-sales-os/0.4', 'Accept-Language': 'pt-BR,pt;q=0.9' } });
+  const r = await fetch(url, { headers: { 'User-Agent': 'site-sales-os/0.5', 'Accept-Language': 'pt-BR,pt;q=0.9' } });
   if (!r.ok) throw new Error(`Nominatim indisponível (${r.status})`);
   return r.json();
 }
@@ -69,10 +80,17 @@ async function geocodeCity(city) {
   return { lat: Number(rows[0].lat), lng: Number(rows[0].lon) };
 }
 
+function nominatimName(p) {
+  const n = p.namedetails || {};
+  const x = p.extratags || {};
+  const displayFirst = String(p.display_name || '').split(',')[0];
+  return cleanName(n.name) || cleanName(n['name:pt']) || cleanName(p.name) || cleanName(x.brand) || cleanName(x.operator) || cleanName(x.official_name) || cleanName(x.short_name) || cleanName(displayFirst) || '';
+}
+
 function mapNominatimPlace(p) {
   const x = p.extratags || {};
   const lat = Number(p.lat), lng = Number(p.lon);
-  const name = p.namedetails?.name || p.name || String(p.display_name || '').split(',')[0] || 'Empresa local';
+  const name = nominatimName(p);
   return {
     id: `nominatim-${p.osm_type || 'place'}-${p.osm_id || p.place_id}`,
     source: 'nominatim', name, address: p.display_name || '', lat, lng,
@@ -133,7 +151,7 @@ async function prospectHandler(request) {
 export default {
   async fetch(request, env) {
     const p = new URL(request.url).pathname;
-    if (p === '/api/health') return json({ ok: true, service: 'site-sales-os', version: 4 });
+    if (p === '/api/health') return json({ ok: true, service: 'site-sales-os', version: 5 });
     if (p === '/api/leads') return leadsHandler(request, env);
     if (p === '/api/fallback-leads') return fallbackLeadsHandler(request);
     if (p === '/api/prospect') return prospectHandler(request, env);
