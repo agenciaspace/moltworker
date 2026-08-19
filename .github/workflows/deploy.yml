@@ -1,33 +1,21 @@
-name: Deploy to Cloudflare
+name: Deploy site-sales-os to Cloudflare
 
 on:
   push:
     branches:
-      - main
-      - claude/deploy-cloudflare-*
+      - claude/deploy-cloudflare-site-sales-os
   workflow_dispatch:
+
+permissions:
+  contents: write
 
 jobs:
   deploy:
-    name: Deploy Worker
+    name: Deploy Worker and record URL
     runs-on: ubuntu-latest
-    timeout-minutes: 30
-    permissions:
-      contents: read
-      id-token: write
+    timeout-minutes: 20
 
     steps:
-      - name: Debug - Check if secrets are available
-        run: |
-          echo "Checking secrets availability..."
-          if [ -z "${{ secrets.CLOUDFLARE_API_TOKEN }}" ]; then
-            echo "❌ CLOUDFLARE_API_TOKEN is EMPTY or NOT SET"
-          else
-            echo "✅ CLOUDFLARE_API_TOKEN is available (length: ${#CLOUDFLARE_API_TOKEN})"
-          fi
-        env:
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-
       - name: Checkout repository
         uses: actions/checkout@v4
 
@@ -43,35 +31,29 @@ jobs:
       - name: Build project
         run: npm run build
 
-      - name: Setup Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
       - name: Deploy to Cloudflare
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-        run: npx wrangler deploy
-
-      - name: Configure secrets (if provided)
-        env:
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          MOLTBOT_GATEWAY_TOKEN: ${{ secrets.MOLTBOT_GATEWAY_TOKEN }}
-          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        shell: bash
         run: |
-          if [ -n "$MOLTBOT_GATEWAY_TOKEN" ]; then
-            echo "$MOLTBOT_GATEWAY_TOKEN" | npx wrangler secret put MOLTBOT_GATEWAY_TOKEN || true
+          set -o pipefail
+          npx wrangler deploy 2>&1 | tee /tmp/wrangler-output.txt
+          URL=$(grep -Eo 'https://[A-Za-z0-9._-]+\.workers\.dev' /tmp/wrangler-output.txt | tail -n 1 || true)
+          if [ -z "$URL" ]; then
+            echo "Wrangler completed without a workers.dev URL in its output."
+            exit 1
           fi
-          if [ -n "$ANTHROPIC_API_KEY" ]; then
-            echo "$ANTHROPIC_API_KEY" | npx wrangler secret put ANTHROPIC_API_KEY || true
-          fi
+          printf '%s\n' "$URL" > /tmp/site-sales-os-url.txt
 
-      - name: Output deployment info
+      - name: Record deployment URL
+        shell: bash
         run: |
-          echo "✅ Deploy completed successfully!"
-          echo ""
-          echo "🔗 Your worker is available at: https://moltworker.workers.dev"
-          echo ""
-          if [ -n "${{ secrets.MOLTBOT_GATEWAY_TOKEN }}" ]; then
-            echo "🔑 Access the Control UI with your gateway token"
-          else
-            echo "⚠️  Don't forget to configure MOLTBOT_GATEWAY_TOKEN secret!"
-          fi
+          URL=$(cat /tmp/site-sales-os-url.txt)
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git fetch origin deploy-results-site-sales-os
+          git checkout deploy-results-site-sales-os
+          printf '%s\n' "$URL" > site-sales-os-deployment-url.txt
+          git add site-sales-os-deployment-url.txt
+          git commit -m "Record site-sales-os deployment URL [skip deploy]" || true
+          git push origin deploy-results-site-sales-os
