@@ -1,0 +1,15 @@
+url=https://site-sales-os.leon-925.workers.dev
+---headers---
+HTTP/2 500 
+date: Wed, 19 Aug 2026 03:07:39 GMT
+content-type: application/json; charset=utf-8
+content-length: 53
+report-to: {"group":"cf-nel","max_age":604800,"endpoints":[{"url":"https://a.nel.cloudflare.com/report/v4?s=7XBbtuasUvkSNJSVMAGlBgn7aimCwW8BJtcHgwBhsqZJ768hL1CAx0MefxvI7NpIfKVf3FxxBugQuJt7E0HbKE%2F5qOORfwdOcc7Pm%2FMIezfw3F7qpX4KZrKiuxhKszirTO8aqi2kxBa6KA0GkN9XZGUDxYB%2B"}]}
+nel: {"report_to":"cf-nel","success_fraction":0.0,"max_age":604800}
+server: cloudflare
+cf-ray: a2d5f2fa0ddaac07-SJC
+alt-svc: h3=":443"; ma=86400
+
+
+---body---
+{"error":"Falha temporária na busca OpenStreetMap."}
