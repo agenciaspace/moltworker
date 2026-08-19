@@ -36,14 +36,15 @@ jobs:
           npx wrangler deploy 2>&1 | tee /tmp/wrangler-output.txt
           URL=$(grep -Eo 'https://[A-Za-z0-9._-]+\.workers\.dev' /tmp/wrangler-output.txt | tail -n 1 || true)
           printf '%s\n' "$URL" > /tmp/url.txt
-      - name: Verify v9 APIs
+      - name: Verify v9 APIs after propagation
         if: steps.deploy.outcome == 'success'
         shell: bash
         run: |
           URL=$(cat /tmp/url.txt)
-          curl -sS -o /tmp/health.json "$URL/api/health" || true
-          curl -sS -o /tmp/leads.json -X POST "$URL/api/leads" -H 'content-type: application/json' --data '{"city":"São Paulo","niche":"lawyer","radius":7000}' || true
-          curl -sS -o /tmp/verify.json -X POST "$URL/api/verify-websites" -H 'content-type: application/json' --data '{"leads":[{"id":"mattos-filho-test","name":"Mattos & Filho Advogados","address":"São Paulo, SP","type":"lawyer","verificationBasis":"foursquare","email":"","website":""}]}' || true
+          sleep 8
+          curl -sS -H 'cache-control: no-cache' -o /tmp/health.json "$URL/api/health?check=v9" || true
+          curl -sS -H 'cache-control: no-cache' -o /tmp/leads.json -X POST "$URL/api/leads?check=v9" -H 'content-type: application/json' --data '{"city":"São Paulo","niche":"lawyer","radius":7000}' || true
+          curl -sS -H 'cache-control: no-cache' -o /tmp/verify.json -X POST "$URL/api/verify-websites?check=v9" -H 'content-type: application/json' --data '{"leads":[{"id":"mattos-filho-test","name":"Mattos & Filho Advogados","address":"São Paulo, SP","type":"lawyer","verificationBasis":"foursquare","email":"","website":""}]}' || true
       - name: Record diagnostics
         if: always()
         shell: bash
@@ -64,5 +65,5 @@ jobs:
             cat /tmp/verify.json 2>/dev/null || true
           } > site-sales-os-deploy-debug.txt
           git add site-sales-os-deploy-debug.txt
-          git commit -m "Record v9 deploy diagnostics [skip deploy]" || true
+          git commit -m "Record v9 propagation diagnostics [skip deploy]" || true
           git push origin deploy-results-site-sales-os
