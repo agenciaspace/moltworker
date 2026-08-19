@@ -47,15 +47,15 @@ jobs:
           URL=$(grep -Eo 'https://[A-Za-z0-9._-]+\.workers\.dev' /tmp/wrangler-output.txt | tail -n 1 || true)
           printf '%s\n' "$URL" > /tmp/url.txt
           test -n "$URL"
-      - name: Verify v9 APIs after propagation
+      - name: Verify v10 APIs after propagation
         if: steps.deploy.outcome == 'success'
         shell: bash
         run: |
           URL=$(cat /tmp/url.txt)
           sleep 8
-          curl -sS -H 'cache-control: no-cache' -o /tmp/health.json "$URL/api/health?check=v9" || true
-          curl -sS -H 'cache-control: no-cache' -o /tmp/leads.json -X POST "$URL/api/leads?check=v9" -H 'content-type: application/json' --data '{"city":"São Paulo","niche":"lawyer","radius":7000}' || true
-          curl -sS -H 'cache-control: no-cache' -o /tmp/verify.json -X POST "$URL/api/verify-websites?check=v9" -H 'content-type: application/json' --data '{"leads":[{"id":"mattos-filho-test","name":"Mattos & Filho Advogados","address":"São Paulo, SP","type":"lawyer","verificationBasis":"foursquare","email":"","website":""}]}' || true
+          curl -sS -H 'cache-control: no-cache' -o /tmp/health.json "$URL/api/health?check=v10" || true
+          curl -sS -H 'cache-control: no-cache' -o /tmp/leads.json -X POST "$URL/api/leads?check=v10" -H 'content-type: application/json' --data '{"city":"São Paulo","niche":"dentist","radius":7000}' || true
+          curl -sS -H 'cache-control: no-cache' -o /tmp/verify.json -X POST "$URL/api/verify-websites?check=v10" -H 'content-type: application/json' --data '{"leads":[{"id":"mattos-filho-test","name":"Mattos & Filho Advogados","address":"São Paulo, SP","type":"legal services","verificationBasis":"tomtom","email":"","website":""}]}' || true
       - name: Record diagnostics
         if: always()
         shell: bash
@@ -76,5 +76,5 @@ jobs:
             cat /tmp/verify.json 2>/dev/null || true
           } > site-sales-os-deploy-debug.txt
           git add site-sales-os-deploy-debug.txt
-          git commit -m "Record v9 wrangler 4.124 diagnostics [skip deploy]" || true
+          git commit -m "Record v10 responsive TomTom diagnostics [skip deploy]" || true
           git push origin deploy-results-site-sales-os
