@@ -1,21 +1,35 @@
-deploy_outcome=success
+deploy_outcome=failure
 ---wrangler---
-=== wrangler attempt 1 ===
+=== wrangler 4.124.0 attempt 1 ===
+npm warn EBADENGINE Unsupported engine {
+npm warn EBADENGINE   package: 'wrangler@4.124.0',
+npm warn EBADENGINE   required: { node: '>=22.0.0' },
+npm warn EBADENGINE   current: { node: 'v20.20.2', npm: '10.8.2' }
+npm warn EBADENGINE }
+npm warn EBADENGINE Unsupported engine {
+npm warn EBADENGINE   package: '@cloudflare/kv-asset-handler@0.5.0',
+npm warn EBADENGINE   required: { node: '>=22.0.0' },
+npm warn EBADENGINE   current: { node: 'v20.20.2', npm: '10.8.2' }
+npm warn EBADENGINE }
+npm warn EBADENGINE Unsupported engine {
+npm warn EBADENGINE   package: 'miniflare@5.20260815.0-alpha',
+npm warn EBADENGINE   required: { node: '>=22.0.0' },
+npm warn EBADENGINE   current: { node: 'v20.20.2', npm: '10.8.2' }
+npm warn EBADENGINE }
+Wrangler requires at least Node.js v22.0.0. You are using v20.20.2. Please update your version of Node.js.
 
- ⛅️ wrangler 4.60.0 (update available 4.124.0)
-──────────────────────────────────────────────
-Total Upload: 63.06 KiB / gzip: 19.56 KiB
-Worker Startup Time: 5 ms
-Uploaded site-sales-os (2.56 sec)
-Deployed site-sales-os triggers (0.51 sec)
-  https://site-sales-os.leon-925.workers.dev
-Current Version ID: 9089597a-cb2f-4528-a736-f3f3ee7e9720
+Consider using a Node.js version manager such as https://volta.sh/ or https://github.com/nvm-sh/nvm.
+=== wrangler 4.124.0 attempt 2 ===
+Wrangler requires at least Node.js v22.0.0. You are using v20.20.2. Please update your version of Node.js.
 
-Cloudflare collects anonymous telemetry about your usage of Wrangler. Learn more at https://github.com/cloudflare/workers-sdk/tree/main/packages/wrangler/telemetry.md
+Consider using a Node.js version manager such as https://volta.sh/ or https://github.com/nvm-sh/nvm.
+=== wrangler 4.124.0 attempt 3 ===
+Wrangler requires at least Node.js v22.0.0. You are using v20.20.2. Please update your version of Node.js.
+
+Consider using a Node.js version manager such as https://volta.sh/ or https://github.com/nvm-sh/nvm.
 
 ---health---
-{"ok":true,"service":"site-sales-os","version":9,"capabilities":{"foursquarePlaces":false,"webSearch":false}}
+
 ---leads---
-{"city":"São Paulo","niche":"lawyer","provider":"openstreetmap-browser","center":{"lat":-23.5506507,"lng":-46.6333824},"overpassQuery":"[out:json][timeout:15];(nwr[\"office\"=\"lawyer\"](around:7000,-23.5506507,-46.6333824););out center tags 80;","count":0,"leads":[],"capabilities":{"foursquarePlaces":false,"webSearch":false}}
+
 ---verify-mattos-filho---
-{"results":[{"id":"mattos-filho-test","websiteStatus":"found","website":"https://mattosfilho.adv.br/","evidence":"domain-probe","sources":["domain-probe"]}],"capabilities":{"foursquarePlaces":false,"webSearch":false}}
