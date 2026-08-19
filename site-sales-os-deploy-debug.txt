@@ -4,25 +4,17 @@ deploy_outcome=success
  ⛅️ wrangler 4.60.0 (update available 4.124.0)
 ──────────────────────────────────────────────
 Total Upload: 51.50 KiB / gzip: 16.08 KiB
-Worker Startup Time: 4 ms
-Uploaded site-sales-os (3.06 sec)
-Deployed site-sales-os triggers (0.59 sec)
+Worker Startup Time: 6 ms
+Uploaded site-sales-os (1.62 sec)
+Deployed site-sales-os triggers (0.36 sec)
   https://site-sales-os.leon-925.workers.dev
-Current Version ID: dbc3f9e2-80b8-4873-9624-63846bf7421e
+Current Version ID: 301afc1c-b4fc-4a47-9947-ee374270f39f
 
 Cloudflare collects anonymous telemetry about your usage of Wrangler. Learn more at https://github.com/cloudflare/workers-sdk/tree/main/packages/wrangler/telemetry.md
 
----headers---
-HTTP/2 200 
-date: Wed, 19 Aug 2026 03:39:08 GMT
-content-type: application/json; charset=utf-8
-content-length: 272
-report-to: {"group":"cf-nel","max_age":604800,"endpoints":[{"url":"https://a.nel.cloudflare.com/report/v4?s=FoWi1OoJSNNTIzf1ABpbAMgJXJ13AREYmqTUiifOOPUKmtnG0jlwZnE7zWvfHby1ISS%2F7RxsTKJ178Y3eozrbY3QZaRiykWmzDmtl0HMYamRaNNapDZDBI1BrxYZuDC4S6pvoYxBySZbnWoB2N%2BZdPP3rpTB"}]}
-nel: {"report_to":"cf-nel","success_fraction":0.0,"max_age":604800}
-server: cloudflare
-cf-ray: a2d6211fde606725-DFW
-alt-svc: h3=":443"; ma=86400
-
-
----body---
+---health---
+{"ok":true,"service":"site-sales-os","version":5}
+---leads---
 {"city":"São Paulo","niche":"dentist","provider":"openstreetmap-browser","center":{"lat":-23.5506507,"lng":-46.6333824},"overpassQuery":"[out:json][timeout:15];(nwr[\"amenity\"=\"dentist\"](around:7000,-23.5506507,-46.6333824););out center tags 80;","count":0,"leads":[]}
+---fallback---
+{"city":"São Paulo","niche":"dentist","provider":"nominatim-fallback","count":4,"leads":[{"id":"nominatim-way-713121810","source":"nominatim","name":"Rua Dentista Barreto","address":"Rua Dentista Barreto, Vila Carrão, Carrão, São Paulo, Região Sudeste, 03420-000, Brasil","lat":-23.5502323,"lng":-46.5456518,"phone":"","website":"","mapsUrl":"https://www.openstreetmap.org/?mlat=-23.5502323&mlon=-46.5456518#map=18/-23.5502323/-46.5456518","rating":null,"reviews":0,"type":"residential","instagram":"","status":"new"},{"id":"nominatim-way-947453967","source":"nominatim","name":"Rua Dentista Barreto","address":"Rua Dentista Barreto, Vila Carrão, Carrão, São Paulo, Região Sudeste, 03403-001, Brasil","lat":-23.5454657,"lng":-46.5431329,"phone":"","website":"","mapsUrl":"https://www.openstreetmap.org/?mlat=-23.5454657&mlon=-46.5431329#map=18/-23.5454657/-46.5431329","rating":null,"reviews":0,"type":"residential","instagram":"","status":"new"},{"id":"nominatim-way-173374620","source":"nominatim","name":"Rua Dentista hamilton Pontes de Abreu","address":"Rua Dentista hamilton Pontes de Abreu, Vila Monte Verde, Morro Grande, Tatuí, São Paulo, Região Sudeste, 18279-450, Brasil","lat":-23.3379985,"lng":-47.8497689,"phone":"","website":"","mapsUrl":"https://www.openstreetmap.org/?mlat=-23.3379985&mlon=-47.8497689#map=18/-23.3379985/-47.8497689","rating":null,"reviews":0,"type":"residential","instagram":"","status":"new"},{"id":"nominatim-way-633555848","source":"nominatim","name":"Rua Dentista Bento Aherni","address":"Rua Dentista Bento Aherni, Jardim dante Verdolini, Boa Esperança do Sul, São Paulo, Região Sudeste, 14930-000, Brasil","lat":-21.9866926,"lng":-48.3816117,"phone":"","website":"","mapsUrl":"https://www.openstreetmap.org/?mlat=-21.9866926&mlon=-48.3816117#map=18/-21.9866926/-48.3816117","rating":null,"reviews":0,"type":"residential","instagram":"","status":"new"}]}
