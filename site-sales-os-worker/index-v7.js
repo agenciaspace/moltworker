@@ -1,0 +1,114 @@
+import LANDING from "./landing.js";
+import APP_HTML from "./app-html.js";
+import APP_JS from "./app-v2.js";
+import APP_CSS from "./app-css.js";
+import MEMBERS from "./members.js";
+
+const NICHE_TO_OSM = {
+  dentist: '["amenity"="dentist"]', clinic: '["amenity"="clinic"]', lawyer: '["office"="lawyer"]',
+  architect: '["office"="architect"]', accountant: '["office"="accountant"]',
+  physiotherapy: '["healthcare"="physiotherapist"]', salon: '["shop"="hairdresser"]',
+  gym: '["leisure"="fitness_centre"]', restaurant: '["amenity"="restaurant"]', real_estate: '["office"="estate_agent"]'
+};
+const NICHE_LABELS = {
+  dentist:'dentista',clinic:'clínica',lawyer:'advogado',architect:'arquiteto',accountant:'contador',
+  physiotherapy:'fisioterapia',salon:'salão de beleza',gym:'academia',restaurant:'restaurante',real_estate:'imobiliária'
+};
+const NICHE_POI_TERMS = {
+  dentist:'dentist',clinic:'clinic',lawyer:'lawyer',architect:'architect',accountant:'accountant',
+  physiotherapy:'physiotherapist',salon:'hairdresser',gym:'fitness centre',restaurant:'restaurant',real_estate:'estate agent'
+};
+const GENERIC_NAMES = new Set(['empresa local','empresa','local business','business','dentista','clínica','clinica','advogado','arquiteto','contador','fisioterapia','salão de beleza','salao de beleza','academia','restaurante','imobiliária','imobiliaria','dentist','clinic','lawyer','architect','accountant','physiotherapist','hairdresser','fitness centre','estate agent']);
+const NAME_STOP = new Set(['de','da','do','das','dos','e','&','ltda','me','eireli','sa','s/a','advogado','advogados','advocacia','sociedade','odontologia','odontologico','odontológica','clinica','clínica','consultorio','consultório','arquitetura','contabilidade','imobiliaria','imobiliária','restaurante','academia','studio','centro']);
+const FREE_EMAIL = new Set(['gmail.com','hotmail.com','outlook.com','yahoo.com','icloud.com','live.com','bol.com.br','uol.com.br','terra.com.br']);
+
+function json(data,status=200){return new Response(JSON.stringify(data),{status,headers:{'content-type':'application/json; charset=utf-8'}})}
+function text(body,type='text/html; charset=utf-8'){return new Response(body,{headers:{'content-type':type}})}
+function cleanPhone(v=''){return String(v).replace(/[^\d+]/g,'')}
+function normalize(v=''){return String(v).normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,' ').trim()}
+function cleanName(v=''){
+  const name=String(v||'').replace(/\s+/g,' ').trim();
+  if(!name||name.length<2||GENERIC_NAMES.has(name.toLowerCase())||/^\d+[a-z]?$/i.test(name)||/^(rua|r\.|avenida|av\.|alameda|travessa|praça|praca|largo|rodovia|estrada|viela|beco)\b/i.test(name))return'';
+  return name;
+}
+function businessTokens(name=''){return normalize(name).split(/\s+/).filter(x=>x.length>1&&!NAME_STOP.has(x)).slice(0,6)}
+
+function mapGooglePlace(p){
+  const name=cleanName(p.displayName?.text);
+  return {id:p.id,source:'google',name,address:p.formattedAddress||'',lat:p.location?.latitude,lng:p.location?.longitude,
+    phone:cleanPhone(p.nationalPhoneNumber||p.internationalPhoneNumber||''),email:'',website:p.websiteUri||'',mapsUrl:p.googleMapsUri||'',
+    rating:p.rating||null,reviews:p.userRatingCount||0,type:p.primaryType||(p.types||[])[0]||'',instagram:'',status:'new',websiteStatus:p.websiteUri?'found':'unverified'};
+}
+async function googleSearchText(textQuery,env){
+  if(!env.GOOGLE_PLACES_API_KEY)return null;
+  const r=await fetch('https://places.googleapis.com/v1/places:searchText',{method:'POST',headers:{'Content-Type':'application/json','X-Goog-Api-Key':env.GOOGLE_PLACES_API_KEY,'X-Goog-FieldMask':'places.id,places.displayName,places.formattedAddress,places.location,places.nationalPhoneNumber,places.internationalPhoneNumber,places.websiteUri,places.googleMapsUri,places.rating,places.userRatingCount,places.primaryType,places.types'},body:JSON.stringify({textQuery,languageCode:'pt-BR',regionCode:'BR'})});
+  if(!r.ok)return null;return r.json();
+}
+async function googleSearch({city,niche},env){const d=await googleSearchText(`${NICHE_LABELS[niche]||niche} em ${city}`,env);if(!d)return null;return(d.places||[]).map(mapGooglePlace).filter(p=>p.name&&p.lat&&p.lng)}
+
+async function nominatim(params){
+  const u=new URL('https://nominatim.openstreetmap.org/search');Object.entries(params).forEach(([k,v])=>u.searchParams.set(k,String(v)));
+  const r=await fetch(u,{headers:{'User-Agent':'site-sales-os/0.7','Accept-Language':'pt-BR,pt;q=0.9'}});if(!r.ok)throw Error(`Nominatim indisponível (${r.status})`);return r.json();
+}
+async function geocodeCity(city){const rows=await nominatim({q:`${city}, Brasil`,format:'jsonv2',limit:1,countrycodes:'br'});if(!rows[0])throw Error('Cidade não encontrada.');return{lat:Number(rows[0].lat),lng:Number(rows[0].lon)}}
+function nominatimName(p){const n=p.namedetails||{},x=p.extratags||{},d=String(p.display_name||'').split(',')[0];return cleanName(n.name)||cleanName(n['name:pt'])||cleanName(p.name)||cleanName(x.brand)||cleanName(x.operator)||cleanName(x.official_name)||cleanName(x.short_name)||cleanName(d)||''}
+function mapNominatimPlace(p){
+  const x=p.extratags||{},lat=Number(p.lat),lng=Number(p.lon),name=nominatimName(p);
+  return{id:`nominatim-${p.osm_type||'place'}-${p.osm_id||p.place_id}`,source:'nominatim',name,address:p.display_name||'',lat,lng,
+    phone:cleanPhone(x.phone||x['contact:phone']||''),email:x.email||x['contact:email']||'',website:x.website||x['contact:website']||'',
+    mapsUrl:Number.isFinite(lat)&&Number.isFinite(lng)?`https://www.openstreetmap.org/?mlat=${lat}&mlon=${lng}#map=18/${lat}/${lng}`:'',
+    rating:null,reviews:0,type:p.type||p.category||'',instagram:x.instagram||x['contact:instagram']||'',status:'new',websiteStatus:(x.website||x['contact:website'])?'found':'unverified'};
+}
+function bbox(center,radiusMeters){const r=Math.min(Math.max(Number(radiusMeters)||7000,1000),20000),dLat=r/111320,dLng=r/(111320*Math.cos(center.lat*Math.PI/180));return`${center.lng-dLng},${center.lat+dLat},${center.lng+dLng},${center.lat-dLat}`}
+async function fallbackLeadsHandler(request){
+  if(request.method!=='POST')return json({error:'Method not allowed'},405);
+  try{const{city='São Paulo',niche='dentist',radius=7000}=await request.json(),center=await geocodeCity(city),poi=NICHE_POI_TERMS[niche]||NICHE_LABELS[niche]||niche;
+    const rows=await nominatim({q:`[${poi}]`,format:'jsonv2',limit:40,countrycodes:'br',layer:'poi',viewbox:bbox(center,radius),bounded:1,addressdetails:1,extratags:1,namedetails:1,dedupe:1});
+    const leads=(rows||[]).map(mapNominatimPlace).filter(p=>p.name&&p.lat&&p.lng).slice(0,40);return json({city,niche,provider:'nominatim-poi-fallback',center,count:leads.length,leads});
+  }catch(e){return json({error:e.message||'Fallback indisponível'},500)}
+}
+async function leadsHandler(request,env){
+  if(request.method!=='POST')return json({error:'Method not allowed'},405);
+  try{const{city='São Paulo',niche='dentist',radius=7000}=await request.json(),google=await googleSearch({city,niche},env);if(google)return json({city,niche,provider:'google',center:null,count:google.length,leads:google});
+    const center=await geocodeCity(city),filter=NICHE_TO_OSM[niche]||'["name"]',r=Math.min(Math.max(Number(radius)||7000,1000),20000),overpassQuery=`[out:json][timeout:15];(nwr${filter}(around:${r},${center.lat},${center.lng}););out center tags 80;`;
+    return json({city,niche,provider:'openstreetmap-browser',center,overpassQuery,count:0,leads:[]});
+  }catch(e){return json({error:e.message||'Erro na busca'},500)}
+}
+
+function candidateDomains(lead){
+  const set=new Set();
+  if(lead.website){try{set.add(new URL(/^https?:/i.test(lead.website)?lead.website:`https://${lead.website}`).hostname.replace(/^www\./,''))}catch{}}
+  if(lead.email){const d=String(lead.email).split('@').pop()?.toLowerCase();if(d&&!FREE_EMAIL.has(d)&&d.includes('.'))set.add(d)}
+  const all=businessTokens(lead.name),base=all.join(''),hyphen=all.join('-');
+  if(base.length>=5){set.add(`${base}.com.br`);set.add(`${base}.com`);if(lead.type==='lawyer'||/advog/i.test(lead.name))set.add(`${base}.adv.br`)}
+  if(hyphen.length>=5)set.add(`${hyphen}.com.br`);
+  return[...set].slice(0,6);
+}
+function pageMatchesName(html,name){
+  const txt=normalize(String(html||'').replace(/<script[\s\S]*?<\/script>/gi,' ').replace(/<style[\s\S]*?<\/style>/gi,' ').replace(/<[^>]+>/g,' '));
+  const t=businessTokens(name).filter(x=>x.length>=3);if(!t.length)return false;const hits=t.filter(x=>txt.includes(x)).length;return t.length===1?t[0].length>=7&&hits===1:hits>=Math.min(2,t.length);
+}
+async function probeDomain(domain,name,trustDomain=false){
+  for(const host of [domain,`www.${domain}`]){
+    try{const c=new AbortController(),timer=setTimeout(()=>c.abort(),4500);const r=await fetch(`https://${host}/`,{redirect:'follow',signal:c.signal,headers:{'User-Agent':'Mozilla/5.0 SiteSalesOS/0.7','Range':'bytes=0-32767'}});clearTimeout(timer);
+      const ct=r.headers.get('content-type')||'';let body='';if(ct.includes('text/html'))body=(await r.text()).slice(0,80000);
+      if(trustDomain||pageMatchesName(body,name))return{found:true,website:r.url||`https://${host}/`,evidence:trustDomain?'corporate-email-domain':'domain-and-content-match'};
+    }catch{}
+  }return{found:false};
+}
+async function verifyOne(lead,env){
+  if(lead.website)return{id:lead.id,websiteStatus:'found',website:lead.website,evidence:'source-website'};
+  if(env.GOOGLE_PLACES_API_KEY){const d=await googleSearchText(`${lead.name} ${lead.address||''}`,env);for(const p of d?.places||[]){if(p.websiteUri){const a=businessTokens(lead.name),b=businessTokens(p.displayName?.text||'');if(a.some(x=>b.includes(x)))return{id:lead.id,websiteStatus:'found',website:p.websiteUri,evidence:'google-places'}}}}
+  const emailDomain=lead.email?String(lead.email).split('@').pop()?.toLowerCase():'';
+  for(const d of candidateDomains(lead)){const r=await probeDomain(d,lead.name,!!emailDomain&&d===emailDomain&&!FREE_EMAIL.has(d));if(r.found)return{id:lead.id,websiteStatus:'found',website:r.website,evidence:r.evidence}}
+  return{id:lead.id,websiteStatus:'unverified',website:'',evidence:'no-verified-domain'};
+}
+async function verifyWebsitesHandler(request,env){
+  if(request.method!=='POST')return json({error:'Method not allowed'},405);
+  try{const body=await request.json(),leads=(body.leads||[]).slice(0,12),out=[];for(let i=0;i<leads.length;i+=4){out.push(...await Promise.all(leads.slice(i,i+4).map(l=>verifyOne(l,env))))}return json({results:out});}catch(e){return json({error:e.message||'Verification failed'},500)}
+}
+
+function fallback({lead,goal,notes}){const name=lead?.name||'sua empresa';if(goal==='followup')return`Oi! Passando só para retomar a mensagem sobre o site da ${name}. Posso montar uma prévia objetiva e você avalia sem compromisso.`;if(goal==='objection-price')return`Entendo. Podemos começar com uma versão enxuta para a ${name}, focada em apresentação, confiança e contato por WhatsApp. Posso te passar o escopo mínimo e o valor.`;if(goal==='proposal')return`Proposta — ${name}\n\nInclui página responsiva, apresentação do negócio, serviços, localização, WhatsApp, SEO básico e publicação.\n\nPrazo sugerido: 3 a 5 dias úteis após receber os materiais.`;return`Oi! Encontrei a ${name} pesquisando negócios da região e vi uma oportunidade de melhorar a presença online. Posso montar uma prévia do site antes de qualquer compromisso. Se eu te mandar uma ideia inicial, você consegue dar uma olhada?${notes?`\n\nContexto: ${notes}`:''}`}
+async function prospectHandler(request){if(request.method!=='POST')return json({error:'Method not allowed'},405);const{lead={},goal='first-contact',notes=''}=await request.json();return json({provider:'template',text:fallback({lead,goal,notes})})}
+
+export default{async fetch(request,env){const p=new URL(request.url).pathname;if(p==='/api/health')return json({ok:true,service:'site-sales-os',version:7});if(p==='/api/leads')return leadsHandler(request,env);if(p==='/api/fallback-leads')return fallbackLeadsHandler(request);if(p==='/api/verify-websites')return verifyWebsitesHandler(request,env);if(p==='/api/prospect')return prospectHandler(request,env);if(p==='/app/app.js')return text(APP_JS,'application/javascript; charset=utf-8');if(p==='/app/styles.css')return text(APP_CSS,'text/css; charset=utf-8');if(p==='/app'||p==='/app/')return text(APP_HTML);if(p==='/members'||p==='/members/')return text(MEMBERS);if(p==='/'||p==='/index.html')return text(LANDING);return new Response('Not found',{status:404})}};
