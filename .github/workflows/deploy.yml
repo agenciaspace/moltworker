@@ -42,12 +42,9 @@ jobs:
         run: |
           URL=$(cat /tmp/url.txt)
           curl -sS -o /tmp/health.json "$URL/api/health" || true
-          curl -sS -o /tmp/leads.json -X POST "$URL/api/leads" \
-            -H 'content-type: application/json' \
-            --data '{"city":"São Paulo","niche":"dentist","radius":7000}' || true
-          curl -sS -o /tmp/fallback.json -X POST "$URL/api/fallback-leads" \
-            -H 'content-type: application/json' \
-            --data '{"city":"São Paulo","niche":"dentist"}' || true
+          curl -sS -o /tmp/leads.json -X POST "$URL/api/leads" -H 'content-type: application/json' --data '{"city":"São Paulo","niche":"lawyer","radius":7000}' || true
+          curl -sS -o /tmp/fallback.json -X POST "$URL/api/fallback-leads" -H 'content-type: application/json' --data '{"city":"São Paulo","niche":"lawyer"}' || true
+          curl -sS -o /tmp/verify.json -X POST "$URL/api/verify-websites" -H 'content-type: application/json' --data '{"leads":[{"id":"mattos-filho-test","name":"Mattos & Filho Advogados","address":"São Paulo, SP","type":"lawyer","email":"","website":""}]}' || true
       - name: Record diagnostics
         if: always()
         shell: bash
@@ -66,6 +63,8 @@ jobs:
             cat /tmp/leads.json 2>/dev/null || true
             printf -- '\n---fallback---\n'
             cat /tmp/fallback.json 2>/dev/null || true
+            printf -- '\n---verify-mattos-filho---\n'
+            cat /tmp/verify.json 2>/dev/null || true
           } > site-sales-os-deploy-debug.txt
           git add site-sales-os-deploy-debug.txt
           git commit -m "Record deploy diagnostics [skip deploy]" || true
