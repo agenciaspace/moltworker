@@ -3,24 +3,24 @@ deploy_outcome=success
 
  ⛅️ wrangler 4.60.0 (update available 4.124.0)
 ──────────────────────────────────────────────
-Total Upload: 49.67 KiB / gzip: 15.55 KiB
-Worker Startup Time: 5 ms
-Uploaded site-sales-os (2.11 sec)
-Deployed site-sales-os triggers (0.47 sec)
+Total Upload: 50.60 KiB / gzip: 15.84 KiB
+Worker Startup Time: 6 ms
+Uploaded site-sales-os (2.23 sec)
+Deployed site-sales-os triggers (0.41 sec)
   https://site-sales-os.leon-925.workers.dev
-Current Version ID: db606f28-4a65-427b-8ae4-125aba84ca86
+Current Version ID: b08df9ed-a3eb-4bb4-ae1e-d9b9f0dfa01f
 
 Cloudflare collects anonymous telemetry about your usage of Wrangler. Learn more at https://github.com/cloudflare/workers-sdk/tree/main/packages/wrangler/telemetry.md
 
 ---headers---
 HTTP/2 200 
-date: Wed, 19 Aug 2026 03:16:39 GMT
+date: Wed, 19 Aug 2026 03:38:36 GMT
 content-type: application/json; charset=utf-8
 content-length: 272
-report-to: {"group":"cf-nel","max_age":604800,"endpoints":[{"url":"https://a.nel.cloudflare.com/report/v4?s=dTmC92Ym7w4O8gD54VYQGaFaU7nnQCw6vSdEBrrhYNsHb24Eh%2FHK4Q8kRu%2B9qdYJPNMzrOtBpHakEQ%2BnCmJ7TGUpMfUZ8O0TriM2td%2BoMu9GskkJaPRkvSApgXAWiutydendx0SazC%2F7KE8Wn7PREMO7vWir"}]}
+report-to: {"group":"cf-nel","max_age":604800,"endpoints":[{"url":"https://a.nel.cloudflare.com/report/v4?s=kM2wkq78E9mo9aR5nvfKGtD0S5LpOxPvVWH1RF08PfzskYBr4nbA%2B7VWxIMuCZfolIC7M0ZQbDNduYErpRb0B4mdrk3lJEYpH5m2d09q%2FYiOxl5OguUTDmiXoFFuMZoeFhceaXBJEb3RQMIcWXt0qcGBG5Zq"}]}
 nel: {"report_to":"cf-nel","success_fraction":0.0,"max_age":604800}
 server: cloudflare
-cf-ray: a2d60032092d13b1-IAD
+cf-ray: a2d620592a9d5cfb-SJC
 alt-svc: h3=":443"; ma=86400
 
 
