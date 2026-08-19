@@ -9,6 +9,10 @@ on:
 permissions:
   contents: write
 
+concurrency:
+  group: site-sales-os-production
+  cancel-in-progress: true
+
 jobs:
   deploy:
     name: Deploy Worker and verify search
