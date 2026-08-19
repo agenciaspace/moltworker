@@ -23,9 +23,16 @@ const NICHE_LABELS = {
   gym: 'academia', restaurant: 'restaurante', real_estate: 'imobiliária'
 };
 
+const NICHE_POI_TERMS = {
+  dentist: 'dentist', clinic: 'clinic', lawyer: 'lawyer', architect: 'architect',
+  accountant: 'accountant', physiotherapy: 'physiotherapist', salon: 'hairdresser',
+  gym: 'fitness centre', restaurant: 'restaurant', real_estate: 'estate agent'
+};
+
 const GENERIC_NAMES = new Set([
   'empresa local','empresa','local business','business','dentista','clínica','clinica','advogado','arquiteto',
-  'contador','fisioterapia','salão de beleza','salao de beleza','academia','restaurante','imobiliária','imobiliaria'
+  'contador','fisioterapia','salão de beleza','salao de beleza','academia','restaurante','imobiliária','imobiliaria',
+  'dentist','clinic','lawyer','architect','accountant','physiotherapist','hairdresser','fitness centre','estate agent'
 ]);
 
 function json(data, status = 200) {
@@ -69,13 +76,13 @@ async function googleSearch({ city, niche }, env) {
 async function nominatim(params) {
   const url = new URL('https://nominatim.openstreetmap.org/search');
   Object.entries(params).forEach(([k,v]) => url.searchParams.set(k, String(v)));
-  const r = await fetch(url, { headers: { 'User-Agent': 'site-sales-os/0.5', 'Accept-Language': 'pt-BR,pt;q=0.9' } });
+  const r = await fetch(url, { headers: { 'User-Agent': 'site-sales-os/0.6', 'Accept-Language': 'pt-BR,pt;q=0.9' } });
   if (!r.ok) throw new Error(`Nominatim indisponível (${r.status})`);
   return r.json();
 }
 
 async function geocodeCity(city) {
-  const rows = await nominatim({ q: `${city}, Brasil`, format: 'jsonv2', limit: 1 });
+  const rows = await nominatim({ q: `${city}, Brasil`, format: 'jsonv2', limit: 1, countrycodes: 'br' });
   if (!rows[0]) throw new Error('Cidade não encontrada.');
   return { lat: Number(rows[0].lat), lng: Number(rows[0].lon) };
 }
@@ -101,17 +108,25 @@ function mapNominatimPlace(p) {
   };
 }
 
+function bbox(center, radiusMeters) {
+  const r = Math.min(Math.max(Number(radiusMeters) || 7000, 1000), 20000);
+  const dLat = r / 111320;
+  const dLng = r / (111320 * Math.cos(center.lat * Math.PI / 180));
+  return `${center.lng-dLng},${center.lat+dLat},${center.lng+dLng},${center.lat-dLat}`;
+}
+
 async function fallbackLeadsHandler(request) {
   if (request.method !== 'POST') return json({ error: 'Method not allowed' }, 405);
   try {
-    const { city = 'São Paulo', niche = 'dentist' } = await request.json();
-    const term = NICHE_LABELS[niche] || niche;
+    const { city = 'São Paulo', niche = 'dentist', radius = 7000 } = await request.json();
+    const center = await geocodeCity(city);
+    const poi = NICHE_POI_TERMS[niche] || NICHE_LABELS[niche] || niche;
     const rows = await nominatim({
-      q: `${term}, ${city}, Brasil`, format: 'jsonv2', limit: 35,
-      addressdetails: 1, extratags: 1, namedetails: 1, dedupe: 1
+      q: `[${poi}]`, format: 'jsonv2', limit: 40, countrycodes: 'br', layer: 'poi',
+      viewbox: bbox(center, radius), bounded: 1, addressdetails: 1, extratags: 1, namedetails: 1, dedupe: 1
     });
-    const leads = (rows || []).map(mapNominatimPlace).filter(p => p.name && p.lat && p.lng && !p.website).slice(0, 35);
-    return json({ city, niche, provider: 'nominatim-fallback', count: leads.length, leads });
+    const leads = (rows || []).map(mapNominatimPlace).filter(p => p.name && p.lat && p.lng && !p.website).slice(0, 40);
+    return json({ city, niche, provider: 'nominatim-poi-fallback', center, count: leads.length, leads });
   } catch (error) {
     return json({ error: error.message || 'Fallback indisponível' }, 500);
   }
@@ -151,7 +166,7 @@ async function prospectHandler(request) {
 export default {
   async fetch(request, env) {
     const p = new URL(request.url).pathname;
-    if (p === '/api/health') return json({ ok: true, service: 'site-sales-os', version: 5 });
+    if (p === '/api/health') return json({ ok: true, service: 'site-sales-os', version: 6 });
     if (p === '/api/leads') return leadsHandler(request, env);
     if (p === '/api/fallback-leads') return fallbackLeadsHandler(request);
     if (p === '/api/prospect') return prospectHandler(request, env);
