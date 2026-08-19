@@ -1,13 +1,13 @@
 url=https://site-sales-os.leon-925.workers.dev
 ---headers---
 HTTP/2 500 
-date: Wed, 19 Aug 2026 03:07:39 GMT
+date: Wed, 19 Aug 2026 03:09:15 GMT
 content-type: application/json; charset=utf-8
 content-length: 53
-report-to: {"group":"cf-nel","max_age":604800,"endpoints":[{"url":"https://a.nel.cloudflare.com/report/v4?s=7XBbtuasUvkSNJSVMAGlBgn7aimCwW8BJtcHgwBhsqZJ768hL1CAx0MefxvI7NpIfKVf3FxxBugQuJt7E0HbKE%2F5qOORfwdOcc7Pm%2FMIezfw3F7qpX4KZrKiuxhKszirTO8aqi2kxBa6KA0GkN9XZGUDxYB%2B"}]}
+report-to: {"group":"cf-nel","max_age":604800,"endpoints":[{"url":"https://a.nel.cloudflare.com/report/v4?s=E30pNwAw2cUbycptKrXRG39MPMqod9nAY9Sml33pMpvyYELb9wQBezJXWd0512qayevJ0g5HrAjtbbQVqmYKY0LLf%2Fjqxl28Ll40oJbgPbS3%2F7jjPxwYGeWZB2XMK8UE1o8fdtEMkiIwt98QyrWt5S8Bw34w"}]}
 nel: {"report_to":"cf-nel","success_fraction":0.0,"max_age":604800}
 server: cloudflare
-cf-ray: a2d5f2fa0ddaac07-SJC
+cf-ray: a2d5f552d8bfeb93-SEA
 alt-svc: h3=":443"; ma=86400
 
 
