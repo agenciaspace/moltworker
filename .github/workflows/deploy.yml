@@ -1,4 +1,4 @@
-name: Deploy site-sales-os to Cloudflare
+name: Deploy site-sales-os to NEW Cloudflare account
 
 on:
   push:
@@ -10,29 +10,32 @@ permissions:
   contents: write
 
 concurrency:
-  group: site-sales-os-production
+  group: site-sales-os-new-account-production
   cancel-in-progress: true
 
 jobs:
   deploy:
+    if: ${{ secrets.CLOUDFLARE_API_TOKEN_NEW != '' }}
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
           cache: 'npm'
+
       - run: npm ci
       - run: npm run build
-      - name: Deploy with retry
+
+      - name: Deploy Worker to new Cloudflare account
         id: deploy
-        continue-on-error: true
         env:
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN_NEW }}
         shell: bash
         run: |
-          set -o pipefail
+          set -euo pipefail
           : > /tmp/wrangler-output.txt
           success=0
           for attempt in 1 2 3; do
@@ -45,18 +48,38 @@ jobs:
           done
           test "$success" = "1"
           URL=$(grep -Eo 'https://[A-Za-z0-9._-]+\.workers\.dev' /tmp/wrangler-output.txt | tail -n 1 || true)
-          printf '%s\n' "$URL" > /tmp/url.txt
           test -n "$URL"
-      - name: Verify v10 APIs after propagation
-        if: steps.deploy.outcome == 'success'
+          printf '%s\n' "$URL" > /tmp/url.txt
+
+      - name: Configure TomTom secret
+        if: ${{ secrets.TOMTOM_API_KEY != '' }}
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN_NEW }}
+          TOMTOM_API_KEY: ${{ secrets.TOMTOM_API_KEY }}
+        shell: bash
+        run: |
+          printf '%s' "$TOMTOM_API_KEY" | npx --yes wrangler@4.124.0 secret put TOMTOM_API_KEY
+
+      - name: Configure Brave secret when available
+        if: ${{ secrets.BRAVE_SEARCH_API_KEY != '' }}
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN_NEW }}
+          BRAVE_SEARCH_API_KEY: ${{ secrets.BRAVE_SEARCH_API_KEY }}
+        shell: bash
+        run: |
+          printf '%s' "$BRAVE_SEARCH_API_KEY" | npx --yes wrangler@4.124.0 secret put BRAVE_SEARCH_API_KEY
+
+      - name: Verify production
         shell: bash
         run: |
           URL=$(cat /tmp/url.txt)
           sleep 8
-          curl -sS -H 'cache-control: no-cache' -o /tmp/health.json "$URL/api/health?check=v10" || true
-          curl -sS -H 'cache-control: no-cache' -o /tmp/leads.json -X POST "$URL/api/leads?check=v10" -H 'content-type: application/json' --data '{"city":"São Paulo","niche":"dentist","radius":7000}' || true
-          curl -sS -H 'cache-control: no-cache' -o /tmp/verify.json -X POST "$URL/api/verify-websites?check=v10" -H 'content-type: application/json' --data '{"leads":[{"id":"mattos-filho-test","name":"Mattos & Filho Advogados","address":"São Paulo, SP","type":"legal services","verificationBasis":"tomtom","email":"","website":""}]}' || true
-      - name: Record diagnostics
+          curl -fsS -H 'cache-control: no-cache' "$URL/api/health?check=new-account" | tee /tmp/health.json
+          curl -fsS -H 'cache-control: no-cache' -o /tmp/leads.json -X POST "$URL/api/leads?check=new-account" \
+            -H 'content-type: application/json' \
+            --data '{"city":"São Paulo","niche":"dentist","radius":7000}'
+
+      - name: Record new-account deployment result
         if: always()
         shell: bash
         run: |
@@ -65,16 +88,13 @@ jobs:
           git fetch origin deploy-results-site-sales-os
           git checkout deploy-results-site-sales-os
           {
-            printf 'deploy_outcome=%s\n' "${{ steps.deploy.outcome }}"
-            printf -- '---wrangler---\n'
-            cat /tmp/wrangler-output.txt 2>/dev/null || true
-            printf -- '\n---health---\n'
+            printf 'new_account_deploy=true\n'
+            printf 'url='; cat /tmp/url.txt 2>/dev/null || true
+            printf '\n---health---\n'
             cat /tmp/health.json 2>/dev/null || true
-            printf -- '\n---leads---\n'
-            cat /tmp/leads.json 2>/dev/null || true
-            printf -- '\n---verify-mattos-filho---\n'
-            cat /tmp/verify.json 2>/dev/null || true
-          } > site-sales-os-deploy-debug.txt
-          git add site-sales-os-deploy-debug.txt
-          git commit -m "Record v10 Node 22 diagnostics [skip deploy]" || true
+            printf '\n---leads---\n'
+            head -c 12000 /tmp/leads.json 2>/dev/null || true
+          } > site-sales-os-new-account.txt
+          git add site-sales-os-new-account.txt
+          git commit -m "Record new Cloudflare account deployment [skip deploy]" || true
           git push origin deploy-results-site-sales-os
